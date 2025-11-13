@@ -1,0 +1,33 @@
+# 依存関係
+node_modules/
+package-lock.json
+
+# ビルド成果物
+dist/
+
+# 環境変数（機密情報）
+.env
+.env.local
+.env.*.local
+
+# データファイル
+data/*.csv
+data/*.zip
+service-account-key.json
+
+# ログファイル
+*.log
+npm-debug.log*
+
+# OS関連
+.DS_Store
+Thumbs.db
+
+# エディタ
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker関連（任意）
+# docker-compose.override.yml

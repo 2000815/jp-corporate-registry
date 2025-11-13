@@ -1,0 +1,48 @@
+{
+  "name": "corporation-search-api",
+  "version": "1.0.0",
+  "description": "国税庁法人情報検索API - ローカル環境版",
+  "main": "dist/server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "import": "tsx scripts/import-data.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:ps": "docker compose ps",
+    "docker:clean": "docker compose down -v",
+    "docker:restart": "docker compose restart",
+    "setup": "npm install && npm run docker:up && npm run db:migrate",
+    "setup:full": "npm run setup && npm run import"
+  },
+  "keywords": [
+    "corporation",
+    "search",
+    "api",
+    "h3",
+    "postgresql"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/bigquery": "^7.3.0",
+    "dotenv": "^16.3.1",
+    "drizzle-orm": "^0.33.0",
+    "h3": "^1.10.1",
+    "iconv-lite": "^0.7.0",
+    "postgres": "^3.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "drizzle-kit": "^0.24.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}

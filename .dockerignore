@@ -1,0 +1,52 @@
+# Node modules
+node_modules
+npm-debug.log
+yarn-error.log
+
+# ビルド成果物
+dist
+*.tsbuildinfo
+
+# 環境変数ファイル（機密情報）
+.env
+.env.local
+.env.*.local
+
+# Git関連
+.git
+.gitignore
+.github
+
+# ドキュメント
+*.md
+!README.md
+docs
+
+# テストファイル
+__tests__
+*.test.ts
+*.spec.ts
+coverage
+
+# エディタ設定
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS関連
+.DS_Store
+Thumbs.db
+
+# データファイル
+data/*.csv
+
+# ログファイル
+*.log
+
+# その他
+.dockerignore
+docker-compose*.yml
+Dockerfile*
+MIGRATION_SUMMARY.md
