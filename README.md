@@ -80,7 +80,7 @@
 ```bash
 # 1️⃣ リポジトリをクローン
 git clone <repository-url>
-cd corporation-project
+cd jp-corporate-registry
 
 # 2️⃣ 環境変数の設定（必要に応じて編集）
 cp .env.example .env
