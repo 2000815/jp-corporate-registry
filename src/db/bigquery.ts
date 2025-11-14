@@ -1,12 +1,18 @@
-import { BigQuery } from '@google-cloud/bigquery';
+import { BigQuery, BigQueryOptions } from '@google-cloud/bigquery';
 
 /**
  * BigQueryクライアントの初期化
  */
-export const bigquery = new BigQuery({
+const bigqueryOptions: BigQueryOptions = {
   projectId: process.env.BIGQUERY_PROJECT_ID,
-  keyFilename: process.env.BIGQUERY_KEY_FILE,
-});
+};
+
+// Cloud Run 等ではサービスアカウントに権限を付与するだけでよい
+if (process.env.BIGQUERY_KEY_FILE) {
+  bigqueryOptions.keyFilename = process.env.BIGQUERY_KEY_FILE;
+}
+
+export const bigquery = new BigQuery(bigqueryOptions);
 
 /**
  * 企業情報の型定義
