@@ -335,6 +335,8 @@ curl "http://localhost:3000/search?name=ソニー" | jq
 
 ### Google Cloud Run
 
+> Cloud Build と Cloud Run を使った本番環境の構築手順は [`docs/cloud-run.md`](docs/cloud-run.md)、共有用の詳細な手順書は [`docs/cloud-run-manual-ja.md`](docs/cloud-run-manual-ja.md) を参照してください。
+
 本番環境として、サーバーレスでスケーラブルなCloud Runにデプロイ可能：
 
 ```bash

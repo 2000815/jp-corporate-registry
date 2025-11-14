@@ -1,0 +1,41 @@
+# Node.js の依存関係
+node_modules/
+
+# ビルド成果物
+dist/
+
+# 環境変数ファイル
+.env
+
+# ローカル設定
+*.local
+
+# ログファイル
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# エディタの設定
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# その他不要なファイル
+.DS_Store
+
+# データファイル
+data/
+
+# Docker関連
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# サービスアカウントキー
+*.json

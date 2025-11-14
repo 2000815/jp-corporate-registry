@@ -1,0 +1,96 @@
+steps:
+  # Dockerイメージをビルド
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build-image"
+    args:
+      - "build"
+      - "--tag"
+      - "$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$_IMAGE:$SHORT_SHA"
+      - "--tag"
+      - "$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$_IMAGE:latest"
+      - "."
+
+  # イメージをArtifact Registryにプッシュ
+  - name: "gcr.io/cloud-builders/docker"
+    id: "push-image"
+    args:
+      - "push"
+      - "$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$_IMAGE:$SHORT_SHA"
+
+  - name: "gcr.io/cloud-builders/docker"
+    id: "push-latest"
+    args:
+      - "push"
+      - "$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$_IMAGE:latest"
+
+  # Cloud Run へデプロイ
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    id: "deploy"
+    entrypoint: bash
+    args:
+      - "-c"
+      - |
+        set -euo pipefail
+
+        ENV_VARS="NODE_ENV=production,PORT=8080"
+        if [[ -n "${_BIGQUERY_PROJECT_ID:-}" ]]; then
+          ENV_VARS="${ENV_VARS},BIGQUERY_PROJECT_ID=${_BIGQUERY_PROJECT_ID}"
+        fi
+        if [[ -n "${_BIGQUERY_DATASET_ID:-}" ]]; then
+          ENV_VARS="${ENV_VARS},BIGQUERY_DATASET_ID=${_BIGQUERY_DATASET_ID}"
+        fi
+        if [[ -n "${_BIGQUERY_TABLE_ID:-}" ]]; then
+          ENV_VARS="${ENV_VARS},BIGQUERY_TABLE_ID=${_BIGQUERY_TABLE_ID}"
+        fi
+
+        DEPLOY_ARGS=(
+          "$_SERVICE_NAME"
+          "--project=$PROJECT_ID"
+          "--image=$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$_IMAGE:$SHORT_SHA"
+          "--platform=managed"
+          "--region=$_REGION"
+          "--allow-unauthenticated"
+          "--port=8080"
+          "--cpu=$_CPU"
+          "--memory=$_MEMORY"
+          "--min-instances=$_MIN_INSTANCES"
+          "--max-instances=$_MAX_INSTANCES"
+          "--timeout=$_TIMEOUT"
+          "--set-env-vars=${ENV_VARS}"
+        )
+
+        if [[ -n "${_DATABASE_URL_SECRET:-}" ]]; then
+          DEPLOY_ARGS+=("--set-secrets=DATABASE_URL=${_DATABASE_URL_SECRET}:latest")
+        fi
+
+        if [[ -n "${_SERVICE_ACCOUNT:-}" ]]; then
+          DEPLOY_ARGS+=("--service-account=${_SERVICE_ACCOUNT}")
+        fi
+
+        gcloud run deploy "${DEPLOY_ARGS[@]}"
+
+images:
+  - "$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$_IMAGE:$SHORT_SHA"
+  - "$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$_IMAGE:latest"
+
+timeout: 1800s
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _SERVICE_NAME: "corporation-search-api"
+  _REGION: "asia-northeast1"
+  _AR_HOSTNAME: "asia-northeast1-docker.pkg.dev"
+  _AR_REPOSITORY: "corporation-search"
+  _IMAGE: "corporation-search-api"
+  _CPU: "1"
+  _MEMORY: "1Gi"
+  _MIN_INSTANCES: "0"
+  _MAX_INSTANCES: "3"
+  _TIMEOUT: "300s"
+  _SERVICE_ACCOUNT: ""
+  _DATABASE_URL_SECRET: ""
+  _BIGQUERY_PROJECT_ID: ""
+  _BIGQUERY_DATASET_ID: ""
+  _BIGQUERY_TABLE_ID: ""
