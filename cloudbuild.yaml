@@ -45,7 +45,7 @@ steps:
           "--min-instances=$_MIN_INSTANCES"
           "--max-instances=$_MAX_INSTANCES"
           "--timeout=$_TIMEOUT"
-          "--set-env-vars=NODE_ENV=production,PORT=8080"
+          "--set-env-vars=NODE_ENV=production"
         )
 
         # 個別の環境変数を条件付きで追加
