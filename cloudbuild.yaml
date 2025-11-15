@@ -60,10 +60,17 @@ steps:
         fi
 
         if [[ -n "${_ENV_VARS:-}" ]]; then
-          DEPLOY_ARGS+=("--set-env-vars=${_ENV_VARS}")
+          if [[ -z "${_ENV_VARS//[[:space:]]/}" ]]; then
+            echo "_ENV_VARS が空白のみのため --set-env-vars はスキップします" >&2
+          elif [[ "${_ENV_VARS}" != *=* ]]; then
+            echo "_ENV_VARS には KEY=VALUE 形式の値を指定してください (例: LOG_LEVEL=info)" >&2
+            exit 1
+          else
+            DEPLOY_ARGS+=("--set-env-vars=${_ENV_VARS}")
+          fi
         fi
 
-        if [[ -n "${_DATABASE_URL_SECRET:-}" ]]; then
+        if [[ -n "${_DATABASE_URL_SECRET:-}" && -n "${_DATABASE_URL_SECRET//[[:space:]]/}" ]]; then
           DEPLOY_ARGS+=("--set-secrets=DATABASE_URL=${_DATABASE_URL_SECRET}:latest")
         fi
 
