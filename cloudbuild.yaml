@@ -32,17 +32,6 @@ steps:
       - |
         set -euo pipefail
 
-        ENV_VARS="NODE_ENV=production,PORT=8080"
-        if [[ -n "${_BIGQUERY_PROJECT_ID:-}" ]]; then
-          ENV_VARS="${ENV_VARS},BIGQUERY_PROJECT_ID=${_BIGQUERY_PROJECT_ID}"
-        fi
-        if [[ -n "${_BIGQUERY_DATASET_ID:-}" ]]; then
-          ENV_VARS="${ENV_VARS},BIGQUERY_DATASET_ID=${_BIGQUERY_DATASET_ID}"
-        fi
-        if [[ -n "${_BIGQUERY_TABLE_ID:-}" ]]; then
-          ENV_VARS="${ENV_VARS},BIGQUERY_TABLE_ID=${_BIGQUERY_TABLE_ID}"
-        fi
-
         DEPLOY_ARGS=(
           "$_SERVICE_NAME"
           "--project=$PROJECT_ID"
@@ -56,8 +45,23 @@ steps:
           "--min-instances=$_MIN_INSTANCES"
           "--max-instances=$_MAX_INSTANCES"
           "--timeout=$_TIMEOUT"
-          "--set-env-vars=${ENV_VARS}"
+          "--set-env-vars=NODE_ENV=production,PORT=8080"
         )
+
+        # 個別の環境変数を条件付きで追加
+        if [[ -n "${_BIGQUERY_PROJECT_ID:-}" ]]; then
+          DEPLOY_ARGS+=("--set-env-vars=BIGQUERY_PROJECT_ID=${_BIGQUERY_PROJECT_ID}")
+        fi
+        if [[ -n "${_BIGQUERY_DATASET_ID:-}" ]]; then
+          DEPLOY_ARGS+=("--set-env-vars=BIGQUERY_DATASET_ID=${_BIGQUERY_DATASET_ID}")
+        fi
+        if [[ -n "${_BIGQUERY_TABLE_ID:-}" ]]; then
+          DEPLOY_ARGS+=("--set-env-vars=BIGQUERY_TABLE_ID=${_BIGQUERY_TABLE_ID}")
+        fi
+
+        if [[ -n "${_ENV_VARS:-}" ]]; then
+          DEPLOY_ARGS+=("--set-env-vars=${_ENV_VARS}")
+        fi
 
         if [[ -n "${_DATABASE_URL_SECRET:-}" ]]; then
           DEPLOY_ARGS+=("--set-secrets=DATABASE_URL=${_DATABASE_URL_SECRET}:latest")
@@ -94,3 +98,4 @@ substitutions:
   _BIGQUERY_PROJECT_ID: ""
   _BIGQUERY_DATASET_ID: ""
   _BIGQUERY_TABLE_ID: ""
+  _ENV_VARS: ""
