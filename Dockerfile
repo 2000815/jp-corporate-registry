@@ -28,7 +28,6 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=build --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=build --chown=nodejs:nodejs /app/package*.json ./
-COPY --from=build --chown=nodejs:nodejs /app/drizzle ./drizzle
 
 # 環境変数（デフォルト値、実行時に上書き可能）
 ENV NODE_ENV=production
