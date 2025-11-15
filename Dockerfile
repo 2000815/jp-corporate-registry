@@ -7,7 +7,7 @@ WORKDIR /app
 # 依存関係のインストール用ステージ
 FROM base AS deps
 COPY package*.json ./
-RUN npm ci --only=production && \
+RUN npm ci --omit=dev && \
     npm cache clean --force
 
 # ビルド用ステージ
