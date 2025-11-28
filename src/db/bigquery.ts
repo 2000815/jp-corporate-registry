@@ -11,8 +11,8 @@ for (const envVar of requiredEnvVars) {
 // 設定オブジェクト
 const config = {
   projectId: process.env.BIGQUERY_PROJECT_ID || "",
-  datasetId: process.env.BIGQUERY_DATASET_ID || "corporations",
-  tableId: process.env.BIGQUERY_TABLE_ID || "corporations",
+  datasetId: process.env.BIGQUERY_DATASET_ID || "corporation",
+  tableId: process.env.BIGQUERY_TABLE_ID || "corporation",
   location: process.env.BIGQUERY_LOCATION || "asia-northeast1",
 };
 
@@ -63,11 +63,11 @@ export async function searchCorporations(
 
     const query = `
       SELECT
-        corporateNumber,
+        corporate_number as corporateNumber,
         name,
-        prefectureName,
-        cityName,
-        streetNumber
+        prefecture_name as prefectureName,
+        city_name as cityName,
+        street_number as streetNumber
       FROM \`${config.projectId}.${config.datasetId}.${config.tableId}\`
       WHERE name LIKE @name
       ORDER BY name
