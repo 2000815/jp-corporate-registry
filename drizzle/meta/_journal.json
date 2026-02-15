@@ -8,6 +8,20 @@
       "when": 1771031525688,
       "tag": "0000_typical_mesmero",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771033020530,
+      "tag": "0001_abnormal_hairball",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771033299458,
+      "tag": "0002_daffy_moira_mactaggert",
+      "breakpoints": true
     }
   ]
 }

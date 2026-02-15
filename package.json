@@ -9,6 +9,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "import": "tsx scripts/import-data.ts",
+    "import:corporations": "tsx scripts/import-corporations.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",

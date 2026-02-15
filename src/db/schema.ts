@@ -7,6 +7,7 @@ import {
   timestamp,
   boolean,
   integer,
+  text,
   index,
   primaryKey,
 } from "drizzle-orm/pg-core";
@@ -65,18 +66,18 @@ export const corporation = pgTable(
     successorCorporateNumber: char("successor_corporate_number", {
       length: 13,
     }),
-    // 22. 承継等事由 (吸収合併など自由記述あり)
-    successorCause: varchar("successor_cause", { length: 200 }),
+    // 22. 承継等事由 (長文対応)
+    successorCause: text("successor_cause"),
     // 23. 承継等年月日
     successorDate: date("successor_date"),
     // 24. ダミーフラグ (0/1)
     dummyFlag: boolean("dummy_flag").notNull().default(false),
-    // 25. 商号又は名称（英語）
-    nameEn: varchar("name_en", { length: 300 }),
+    // 25. 商号又は名称（英語）(長文対応)
+    nameEn: text("name_en"),
     // 26. 国内所在地（都道府県・英語）
     prefectureNameEn: varchar("prefecture_name_en", { length: 100 }),
-    // 27. 国内所在地（丁目番地等・英語）
-    streetNumberEn: varchar("street_number_en", { length: 300 }),
+    // 27. 国内所在地（丁目番地等・英語）(長文・改行対応)
+    streetNumberEn: text("street_number_en"),
     // 28. 国内所在地（英語）イメージID
     addressEnImageId: varchar("address_en_image_id", { length: 8 }),
     // 29. 商号又は名称（フリガナ）

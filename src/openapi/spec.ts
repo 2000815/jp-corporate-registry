@@ -210,6 +210,91 @@ export const openApiSpec = {
         },
       },
     },
+    "/api/sync/diff": {
+      post: {
+        summary: "差分同期API",
+        description:
+          "国税庁から差分データを取得しDB全体を一括更新します。Cloud Schedulerからの呼び出しを想定。",
+        tags: ["データ同期"],
+        security: [{ ApiKeyAuth: [] }],
+        requestBody: {
+          description: "同期範囲（省略時はlast_processed_dateから昨日まで）",
+          required: false,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  fromDate: {
+                    type: "string",
+                    format: "date",
+                    description: "取得開始日（YYYY-MM-DD）",
+                    example: "2024-01-01",
+                  },
+                  toDate: {
+                    type: "string",
+                    format: "date",
+                    description: "取得終了日（YYYY-MM-DD）",
+                    example: "2024-01-31",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "同期成功",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean", example: true },
+                    message: { type: "string", example: "Sync completed" },
+                    range: {
+                      type: "object",
+                      properties: {
+                        from: { type: "string", example: "2024-01-01" },
+                        to: { type: "string", example: "2024-01-31" },
+                      },
+                    },
+                    stats: {
+                      type: "object",
+                      properties: {
+                        processed: { type: "integer", example: 1000 },
+                        inserted: { type: "integer", example: 500 },
+                        updated: { type: "integer", example: 500 },
+                      },
+                    },
+                    elapsedSeconds: { type: "number", example: 45.5 },
+                  },
+                },
+              },
+            },
+          },
+          "401": {
+            description: "認証エラー",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ErrorResponse" },
+                example: {
+                  error: { code: "UNAUTHORIZED", message: "Invalid API key" },
+                },
+              },
+            },
+          },
+          "500": {
+            description: "サーバーエラー",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ErrorResponse" },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
     schemas: {
@@ -333,6 +418,10 @@ export const openApiSpec = {
     {
       name: "法人情報検索 - BigQuery",
       description: "BigQueryを使用した法人情報検索API（大規模データ対応）",
+    },
+    {
+      name: "データ同期",
+      description: "国税庁データとの差分同期API",
     },
   ],
 };

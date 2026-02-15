@@ -4,6 +4,7 @@ import "dotenv/config";
 import search from "./routes/search.js";
 import searchBigQuery from "./routes/search-bigquery.js";
 import companies from "./routes/companies.js";
+import syncDiff from "./routes/sync-diff.js";
 import swagger from "./routes/swagger.js";
 
 const app = createApp();
@@ -11,6 +12,7 @@ const router = createRouter()
   .get("/search", search)
   .get("/search-bigquery", searchBigQuery)
   .get("/api/companies", companies)
+  .post("/api/sync/diff", syncDiff)
   .get("/api-docs", swagger);
 
 app.use(router);
@@ -25,6 +27,9 @@ createServer(toNodeListener(app)).listen(port, () => {
   );
   console.log(
     `  - Companies:  http://localhost:${port}/api/companies?query=東京 サンプル`,
+  );
+  console.log(
+    `  - Sync Diff:  POST http://localhost:${port}/api/sync/diff (X-API-Key required)`,
   );
   console.log(`Swagger UI: http://localhost:${port}/api-docs`);
 });
