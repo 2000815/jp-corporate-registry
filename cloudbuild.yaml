@@ -48,17 +48,6 @@ steps:
           "--set-env-vars=NODE_ENV=production"
         )
 
-        # 個別の環境変数を条件付きで追加
-        if [[ -n "${_BIGQUERY_PROJECT_ID:-}" ]]; then
-          DEPLOY_ARGS+=("--set-env-vars=BIGQUERY_PROJECT_ID=${_BIGQUERY_PROJECT_ID}")
-        fi
-        if [[ -n "${_BIGQUERY_DATASET_ID:-}" ]]; then
-          DEPLOY_ARGS+=("--set-env-vars=BIGQUERY_DATASET_ID=${_BIGQUERY_DATASET_ID}")
-        fi
-        if [[ -n "${_BIGQUERY_TABLE_ID:-}" ]]; then
-          DEPLOY_ARGS+=("--set-env-vars=BIGQUERY_TABLE_ID=${_BIGQUERY_TABLE_ID}")
-        fi
-
         if [[ -n "${_ENV_VARS:-}" ]]; then
           if [[ -z "${_ENV_VARS//[[:space:]]/}" ]]; then
             echo "_ENV_VARS が空白のみのため --set-env-vars はスキップします" >&2
@@ -102,7 +91,4 @@ substitutions:
   _TIMEOUT: "300s"
   _SERVICE_ACCOUNT: ""
   _DATABASE_URL_SECRET: ""
-  _BIGQUERY_PROJECT_ID: ""
-  _BIGQUERY_DATASET_ID: ""
-  _BIGQUERY_TABLE_ID: ""
   _ENV_VARS: ""

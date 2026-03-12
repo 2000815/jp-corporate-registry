@@ -21,72 +21,6 @@ export const openApiSpec = {
     },
   ],
   paths: {
-    "/search": {
-      get: {
-        summary: "企業名検索 (PostgreSQL)",
-        description: "PostgreSQLから企業名で法人情報を部分一致検索します",
-        tags: ["法人情報検索 - PostgreSQL"],
-        parameters: [
-          {
-            name: "name",
-            in: "query",
-            description: "検索する企業名（部分一致）",
-            required: true,
-            schema: {
-              type: "string",
-              minLength: 1,
-              maxLength: 255,
-              example: "株式会社テスト",
-            },
-          },
-        ],
-        responses: {
-          "200": {
-            description: "検索成功",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    count: {
-                      type: "integer",
-                      description: "検索結果の件数",
-                      example: 2,
-                    },
-                    data: {
-                      type: "array",
-                      description: "法人情報の配列",
-                      items: {
-                        $ref: "#/components/schemas/Corporation",
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-          "400": {
-            description: "リクエストエラー",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    error: {
-                      type: "string",
-                      description: "エラーメッセージ",
-                    },
-                  },
-                },
-              },
-            },
-          },
-          "500": {
-            description: "サーバーエラー",
-          },
-        },
-      },
-    },
     "/api/companies": {
       get: {
         summary: "法人検索API（トークン化AND検索）",
@@ -174,38 +108,6 @@ export const openApiSpec = {
                 },
               },
             },
-          },
-        },
-      },
-    },
-    "/search-bigquery": {
-      get: {
-        summary: "企業名検索 (BigQuery)",
-        description: "BigQueryから企業名で法人情報を部分一致検索します",
-        tags: ["法人情報検索 - BigQuery"],
-        parameters: [
-          {
-            name: "name",
-            in: "query",
-            description: "検索する企業名（部分一致）",
-            required: true,
-            schema: {
-              type: "string",
-              minLength: 1,
-              maxLength: 255,
-              example: "株式会社テスト",
-            },
-          },
-        ],
-        responses: {
-          "200": {
-            description: "検索成功",
-          },
-          "400": {
-            description: "リクエストエラー",
-          },
-          "500": {
-            description: "サーバーエラー",
           },
         },
       },
@@ -414,10 +316,6 @@ export const openApiSpec = {
     {
       name: "法人情報検索 - PostgreSQL",
       description: "PostgreSQLを使用した法人情報検索API",
-    },
-    {
-      name: "法人情報検索 - BigQuery",
-      description: "BigQueryを使用した法人情報検索API（大規模データ対応）",
     },
     {
       name: "データ同期",
