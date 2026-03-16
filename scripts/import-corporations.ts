@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import { parse } from "csv-parse";
 import iconv from "iconv-lite";
 import { db, schema } from "../src/db/index.js";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 const { corporation } = schema;
 
@@ -136,74 +136,79 @@ function parseCsvRecord(
     correctionType: getValue(CSV_COLUMNS.correctionType) ?? "0",
     updatedDate: getDate(CSV_COLUMNS.updatedDate) ?? formatDate(new Date()),
     changedDate: getDate(CSV_COLUMNS.changedDate),
-    name: getValue(CSV_COLUMNS.name),
-    nameImageId: getValue(CSV_COLUMNS.nameImageId),
-    corporationType: getValue(CSV_COLUMNS.corporationType),
-    domPrefecture: getValue(CSV_COLUMNS.domPrefecture),
-    domCity: getValue(CSV_COLUMNS.domCity),
-    domAddress: getValue(CSV_COLUMNS.domAddress),
-    domAddressImageId: getValue(CSV_COLUMNS.domAddressImageId),
-    prefectureCode: getValue(CSV_COLUMNS.prefectureCode),
-    cityCode: getValue(CSV_COLUMNS.cityCode),
-    postalCode: getValue(CSV_COLUMNS.postalCode),
-    foreignAddress: getValue(CSV_COLUMNS.foreignAddress),
-    foreignAddressImageId: getValue(CSV_COLUMNS.foreignAddressImageId),
+    name: getValue(CSV_COLUMNS.name)?.substring(0, 300),
+    nameImageId: getValue(CSV_COLUMNS.nameImageId)?.substring(0, 8),
+    corporationType: getValue(CSV_COLUMNS.corporationType)?.substring(0, 3),
+    domPrefecture: getValue(CSV_COLUMNS.domPrefecture)?.substring(0, 50),
+    domCity: getValue(CSV_COLUMNS.domCity)?.substring(0, 100),
+    domAddress: getValue(CSV_COLUMNS.domAddress)?.substring(0, 300),
+    domAddressImageId: getValue(CSV_COLUMNS.domAddressImageId)?.substring(0, 8),
+    prefectureCode: getValue(CSV_COLUMNS.prefectureCode)?.substring(0, 2),
+    cityCode: getValue(CSV_COLUMNS.cityCode)?.substring(0, 5),
+    postalCode: getValue(CSV_COLUMNS.postalCode)?.substring(0, 7),
+    foreignAddress: getValue(CSV_COLUMNS.foreignAddress)?.substring(0, 300),
+    foreignAddressImageId: getValue(CSV_COLUMNS.foreignAddressImageId)?.substring(0, 8),
     closeDate: getDate(CSV_COLUMNS.closeDate),
-    closeCause: getValue(CSV_COLUMNS.closeCause),
-    successorCorporateNumber: getValue(CSV_COLUMNS.successorCorporateNumber),
-    successorCause: getValue(CSV_COLUMNS.successorCause),
+    closeCause: getValue(CSV_COLUMNS.closeCause)?.substring(0, 2),
+    successorCorporateNumber: getValue(CSV_COLUMNS.successorCorporateNumber)?.substring(0, 13),
+    successorCause: getValue(CSV_COLUMNS.successorCause)?.substring(0, 200),
     successorDate: getDate(CSV_COLUMNS.successorDate),
     dummyFlag: getBool(CSV_COLUMNS.dummyFlag),
-    nameEn: getValue(CSV_COLUMNS.nameEn),
-    domPrefectureEn: getValue(CSV_COLUMNS.domPrefectureEn),
-    domAddressEn: getValue(CSV_COLUMNS.domAddressEn),
-    domAddressEnImageId: getValue(CSV_COLUMNS.domAddressEnImageId),
-    furigana: getValue(CSV_COLUMNS.furigana),
+    nameEn: getValue(CSV_COLUMNS.nameEn)?.substring(0, 300),
+    domPrefectureEn: getValue(CSV_COLUMNS.domPrefectureEn)?.substring(0, 100),
+    domAddressEn: getValue(CSV_COLUMNS.domAddressEn)?.substring(0, 300),
+    domAddressEnImageId: getValue(CSV_COLUMNS.domAddressEnImageId)?.substring(0, 8),
+    furigana: getValue(CSV_COLUMNS.furigana)?.substring(0, 500),
     excludeFromSearch: getBool(CSV_COLUMNS.excludeFromSearch),
     updated_at: new Date(),
     created_at: new Date(),
   };
 }
 
-async function upsertCorporation(
-  record: typeof schema.corporation.$inferInsert,
-): Promise<"inserted" | "updated"> {
-  const existing = await db
-    .select({ corporateNumber: corporation.corporateNumber })
-    .from(corporation)
-    .where(eq(corporation.corporateNumber, record.corporateNumber))
-    .limit(1);
-
-  if (existing.length === 0) {
-    await db.insert(corporation).values(record);
-    return "inserted";
-  } else {
-    const { created_at, ...updateData } = record;
-    await db
-      .update(corporation)
-      .set({ ...updateData, updated_at: new Date() })
-      .where(eq(corporation.corporateNumber, record.corporateNumber));
-    return "updated";
-  }
-}
-
 async function upsertBatch(batch: (typeof schema.corporation.$inferInsert)[]) {
   if (batch.length === 0) return { inserted: 0, updated: 0 };
 
-  let inserted = 0;
-  let updated = 0;
+  try {
+    await db.insert(corporation).values(batch).onConflictDoUpdate({
+      target: [corporation.corporateNumber, corporation.id],
+      set: {
+        processType: sql`EXCLUDED.process_type`,
+        correctionType: sql`EXCLUDED.correction_type`,
+        updatedDate: sql`EXCLUDED.updated_date`,
+        changedDate: sql`EXCLUDED.changed_date`,
+        name: sql`EXCLUDED.name`,
+        nameImageId: sql`EXCLUDED.name_image_id`,
+        corporationType: sql`EXCLUDED.corporation_type`,
+        domPrefecture: sql`EXCLUDED.dom_prefecture`,
+        domCity: sql`EXCLUDED.dom_city`,
+        domAddress: sql`EXCLUDED.dom_address`,
+        domAddressImageId: sql`EXCLUDED.dom_address_image_id`,
+        prefectureCode: sql`EXCLUDED.prefecture_code`,
+        cityCode: sql`EXCLUDED.city_code`,
+        postalCode: sql`EXCLUDED.postal_code`,
+        foreignAddress: sql`EXCLUDED.foreign_address`,
+        foreignAddressImageId: sql`EXCLUDED.foreign_address_image_id`,
+        closeDate: sql`EXCLUDED.close_date`,
+        closeCause: sql`EXCLUDED.close_cause`,
+        successorCorporateNumber: sql`EXCLUDED.successor_corporate_number`,
+        successorCause: sql`EXCLUDED.successor_cause`,
+        successorDate: sql`EXCLUDED.successor_date`,
+        dummyFlag: sql`EXCLUDED.dummy_flag`,
+        nameEn: sql`EXCLUDED.name_en`,
+        domPrefectureEn: sql`EXCLUDED.dom_prefecture_en`,
+        domAddressEn: sql`EXCLUDED.dom_address_en`,
+        domAddressEnImageId: sql`EXCLUDED.dom_address_en_image_id`,
+        furigana: sql`EXCLUDED.furigana`,
+        excludeFromSearch: sql`EXCLUDED.exclude_from_search`,
+        updated_at: sql`EXCLUDED.updated_at`,
+      }
+    });
 
-  for (const record of batch) {
-    try {
-      const result = await upsertCorporation(record);
-      if (result === "inserted") inserted++;
-      else updated++;
-    } catch (error: any) {
-      console.error(`\nレコード処理エラー (${record.corporateNumber}):`, error.message);
-    }
+    return { inserted: batch.length, updated: 0 };
+  } catch (error: any) {
+    console.error(`\nバッチ処理エラー (最初のレコード: ${batch[0]?.corporateNumber}):`, error.message);
+    return { inserted: 0, updated: 0 };
   }
-
-  return { inserted, updated };
 }
 
 async function importCorporations() {

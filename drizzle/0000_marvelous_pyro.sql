@@ -1,3 +1,6 @@
+-- gin_trgm_ops インデックスに必要
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "corporation" (
 	"id" integer NOT NULL,
 	"corporate_number" char(13) NOT NULL,
@@ -8,10 +11,10 @@ CREATE TABLE IF NOT EXISTS "corporation" (
 	"name" varchar(300),
 	"name_image_id" varchar(8),
 	"corporation_type" varchar(3),
-	"prefecture_name" varchar(50),
-	"city_name" varchar(100),
-	"street_number" varchar(300),
-	"address_image_id" varchar(8),
+	"dom_prefecture" varchar(50),
+	"dom_city" varchar(100),
+	"dom_address" varchar(300),
+	"dom_address_image_id" varchar(8),
 	"prefecture_code" char(2),
 	"city_code" char(5),
 	"postal_code" char(7),
@@ -24,14 +27,14 @@ CREATE TABLE IF NOT EXISTS "corporation" (
 	"successor_date" date,
 	"dummy_flag" boolean DEFAULT false NOT NULL,
 	"name_en" varchar(300),
-	"prefecture_name_en" varchar(100),
-	"street_number_en" varchar(300),
-	"address_en_image_id" varchar(8),
+	"dom_prefecture_en" varchar(100),
+	"dom_address_en" varchar(300),
+	"dom_address_en_image_id" varchar(8),
 	"furigana" varchar(500),
 	"exclude_from_search" boolean DEFAULT false NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	CONSTRAINT "corporation_pkey" PRIMARY KEY("corporate_number")
+	CONSTRAINT "corporation_pkey" PRIMARY KEY("corporate_number","id")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "import_runs" (
@@ -55,9 +58,8 @@ CREATE TABLE IF NOT EXISTS "import_state" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "corporation_name_idx" ON "corporation" USING btree ("name");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "corporation_name_trgm_idx" ON "corporation" USING gin ("name" gin_trgm_ops) WHERE "corporation"."exclude_from_search" = false;--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "corporation_name_lower_idx" ON "corporation" USING btree (lower("name")) WHERE "corporation"."exclude_from_search" = false;--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "corporation_search_order_idx" ON "corporation" USING btree (lower("name"),"corporate_number") WHERE "corporation"."exclude_from_search" = false;--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "corporation_corporate_number_idx" ON "corporation" USING btree ("corporate_number");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "corporation_updated_date_idx" ON "corporation" USING btree ("updated_date");
+CREATE INDEX IF NOT EXISTS "corporation_name_idx" ON "corporation" USING btree ("name") WHERE exclude_from_search = false;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "corporation_name_trgm_idx" ON "corporation" USING gin ("name" gin_trgm_ops) WHERE exclude_from_search = false;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "corporation_name_lower_pattern_idx" ON "corporation" USING btree (lower("name") text_pattern_ops) WHERE exclude_from_search = false;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "corporation_name_lower_idx" ON "corporation" USING btree (lower("name")) WHERE exclude_from_search = false;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "corporation_search_order_idx" ON "corporation" USING btree (lower("name"),"corporate_number") WHERE exclude_from_search = false;

@@ -2,12 +2,12 @@
   "name": "corporation-search-api",
   "version": "1.0.0",
   "description": "国税庁法人情報検索API",
-  "main": "dist/server.js",
+  "main": "dist/src/server.js",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node dist/src/server.js",
     "import:corporations": "tsx scripts/import-corporations.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
@@ -15,12 +15,9 @@
     "db:studio": "drizzle-kit studio",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
-    "docker:logs": "docker compose logs -f",
-    "docker:ps": "docker compose ps",
     "docker:clean": "docker compose down -v",
-    "docker:restart": "docker compose restart",
-    "setup": "npm install && npm run docker:up && npm run db:migrate",
-    "setup:full": "npm run setup && npm run import"
+    "setup": "npm install && npm run docker:up && sleep 3 && npm run db:migrate",
+    "setup:full": "npm run setup && npm run import:corporations"
   },
   "keywords": [
     "corporation",

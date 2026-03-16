@@ -106,10 +106,6 @@ export const corporation = pgTable(
       nameTrgmIdx: index("corporation_name_trgm_idx")
         .using("gin", sql`${table.name} gin_trgm_ops`)
         .where(searchableCondition),
-      // GIN gin_bigm_ops (WHERE searchable)
-      nameBigmIdx: index("corporation_name_bigm_idx")
-        .using("gin", sql`${table.name} gin_bigm_ops`)
-        .where(searchableCondition),
       // text_pattern_ops (WHERE searchable)
       nameLowerPatternIdx: index("corporation_name_lower_pattern_idx")
         .on(sql`lower(${table.name}) text_pattern_ops`)

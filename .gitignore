@@ -28,5 +28,8 @@ Thumbs.db
 *.swp
 *.swo
 
-# Docker関連（任意）
-# docker-compose.override.yml
+# Terraform（機密情報）
+terraform/terraform.tfvars
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup

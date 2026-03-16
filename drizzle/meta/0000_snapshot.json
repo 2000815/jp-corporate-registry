@@ -1,5 +1,5 @@
 {
-  "id": "bacf7324-f559-4bf0-a65c-2177484c2897",
+  "id": "15ada127-9391-48df-a6e8-f5274b20b3be",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -63,26 +63,26 @@
           "primaryKey": false,
           "notNull": false
         },
-        "prefecture_name": {
-          "name": "prefecture_name",
+        "dom_prefecture": {
+          "name": "dom_prefecture",
           "type": "varchar(50)",
           "primaryKey": false,
           "notNull": false
         },
-        "city_name": {
-          "name": "city_name",
+        "dom_city": {
+          "name": "dom_city",
           "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false
         },
-        "street_number": {
-          "name": "street_number",
+        "dom_address": {
+          "name": "dom_address",
           "type": "varchar(300)",
           "primaryKey": false,
           "notNull": false
         },
-        "address_image_id": {
-          "name": "address_image_id",
+        "dom_address_image_id": {
+          "name": "dom_address_image_id",
           "type": "varchar(8)",
           "primaryKey": false,
           "notNull": false
@@ -160,20 +160,20 @@
           "primaryKey": false,
           "notNull": false
         },
-        "prefecture_name_en": {
-          "name": "prefecture_name_en",
+        "dom_prefecture_en": {
+          "name": "dom_prefecture_en",
           "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false
         },
-        "street_number_en": {
-          "name": "street_number_en",
+        "dom_address_en": {
+          "name": "dom_address_en",
           "type": "varchar(300)",
           "primaryKey": false,
           "notNull": false
         },
-        "address_en_image_id": {
-          "name": "address_en_image_id",
+        "dom_address_en_image_id": {
+          "name": "dom_address_en_image_id",
           "type": "varchar(8)",
           "primaryKey": false,
           "notNull": false
@@ -218,6 +218,7 @@
             }
           ],
           "isUnique": false,
+          "where": "exclude_from_search = false",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -233,9 +234,25 @@
             }
           ],
           "isUnique": false,
-          "where": "\"corporation\".\"exclude_from_search\" = false",
+          "where": "exclude_from_search = false",
           "concurrently": false,
           "method": "gin",
+          "with": {}
+        },
+        "corporation_name_lower_pattern_idx": {
+          "name": "corporation_name_lower_pattern_idx",
+          "columns": [
+            {
+              "expression": "lower(\"name\") text_pattern_ops",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "exclude_from_search = false",
+          "concurrently": false,
+          "method": "btree",
           "with": {}
         },
         "corporation_name_lower_idx": {
@@ -249,7 +266,7 @@
             }
           ],
           "isUnique": false,
-          "where": "\"corporation\".\"exclude_from_search\" = false",
+          "where": "exclude_from_search = false",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -271,37 +288,7 @@
             }
           ],
           "isUnique": false,
-          "where": "\"corporation\".\"exclude_from_search\" = false",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "corporation_corporate_number_idx": {
-          "name": "corporation_corporate_number_idx",
-          "columns": [
-            {
-              "expression": "corporate_number",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "corporation_updated_date_idx": {
-          "name": "corporation_updated_date_idx",
-          "columns": [
-            {
-              "expression": "updated_date",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
+          "where": "exclude_from_search = false",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -312,7 +299,8 @@
         "corporation_pkey": {
           "name": "corporation_pkey",
           "columns": [
-            "corporate_number"
+            "corporate_number",
+            "id"
           ]
         }
       },
