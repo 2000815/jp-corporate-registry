@@ -1,1 +1,0 @@
-ALTER TABLE "corporation" ALTER COLUMN "successor_cause" SET DATA TYPE varchar(500);

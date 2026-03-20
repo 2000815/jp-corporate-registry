@@ -7,8 +7,15 @@ import { resolve } from "node:path";
 import { parse } from "csv-parse";
 import iconv from "iconv-lite";
 import { readdir } from "node:fs/promises";
+import {
+  parseCsvRecord,
+  upsertCorporation,
+  formatDate,
+  addDays,
+  getYesterdayJST,
+} from "../utils/csv.js";
 
-const { corporation, importState, importRuns } = schema;
+const { importState, importRuns } = schema;
 
 /**
  * APIキー認証
@@ -18,38 +25,11 @@ function authenticateApiKey(event: any): boolean {
   const validApiKey = process.env.API_KEY;
 
   if (!validApiKey) {
-    console.warn("⚠️ API_KEY環境変数が設定されていません");
+    console.warn("API_KEY環境変数が設定されていません");
     return false;
   }
 
   return apiKey === validApiKey;
-}
-
-/**
- * 日付を YYYY-MM-DD 形式にフォーマット
- */
-function formatDate(date: Date): string {
-  return date.toISOString().split("T")[0];
-}
-
-/**
- * 日付を加算
- */
-function addDays(date: Date, days: number): Date {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
-}
-
-/**
- * JSTの昨日の日付を取得
- */
-function getYesterdayJST(): Date {
-  const now = new Date();
-  const jstOffset = 9 * 60;
-  const jstTime = new Date(now.getTime() + jstOffset * 60 * 1000);
-  jstTime.setDate(jstTime.getDate() - 1);
-  return jstTime;
 }
 
 /**
@@ -69,7 +49,6 @@ async function getOrCreateImportState(): Promise<{
     };
   }
 
-  // 初期状態: 前日を設定
   const yesterday = getYesterdayJST();
   const initialDate = formatDate(yesterday);
 
@@ -98,31 +77,6 @@ function calculateFetchRange(
   }
 
   return { from, to: yesterday };
-}
-
-/**
- * 単一レコードのUPSERT実行
- */
-async function upsertCorporation(
-  record: typeof schema.corporation.$inferInsert,
-): Promise<"inserted" | "updated"> {
-  const existing = await db
-    .select({ corporateNumber: corporation.corporateNumber })
-    .from(corporation)
-    .where(eq(corporation.corporateNumber, record.corporateNumber))
-    .limit(1);
-
-  if (existing.length === 0) {
-    await db.insert(corporation).values(record);
-    return "inserted";
-  } else {
-    const { createdAt, ...updateData } = record;
-    await db
-      .update(corporation)
-      .set({ ...updateData, updatedAt: new Date() })
-      .where(eq(corporation.corporateNumber, record.corporateNumber));
-    return "updated";
-  }
 }
 
 /**
@@ -173,84 +127,8 @@ async function updateLastProcessedDate(
 ): Promise<void> {
   await db
     .update(importState)
-    .set({ lastProcessedDate: formatDate(newDate), updatedAt: new Date() })
+    .set({ lastProcessedDate: formatDate(newDate), updated_at: new Date() })
     .where(eq(importState.id, stateId));
-}
-
-/**
- * CSVレコードをパース
- */
-function parseCsvRecord(
-  record: string[],
-): typeof schema.corporation.$inferInsert {
-  const getValue = (index: number) => {
-    const val = record[index];
-    return val === "" || val === undefined || val === null ? null : val;
-  };
-
-  const getDate = (index: number): string | null => {
-    const val = getValue(index);
-    if (!val) return null;
-    // CSVは YYYY-MM-DD 形式なのでそのまま返す
-    if (val.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      return val;
-    }
-    // YYYYMMDD形式の場合は変換
-    if (val.length === 8 && /^\d{8}$/.test(val)) {
-      return `${val.substring(0, 4)}-${val.substring(4, 6)}-${val.substring(
-        6,
-        8,
-      )}`;
-    }
-    return val;
-  };
-
-  const getInt = (index: number): number | null => {
-    const val = getValue(index);
-    if (!val) return null;
-    const num = parseInt(val, 10);
-    return isNaN(num) ? null : num;
-  };
-
-  const getBool = (index: number): boolean => {
-    const val = getValue(index);
-    return val === "1" || val === "true";
-  };
-
-  return {
-    id: getInt(0) ?? 0,
-    corporateNumber: getValue(1) ?? "",
-    processType: getValue(2) ?? "",
-    correctionType: getValue(3) ?? "0",
-    updatedDate: getDate(4) ?? formatDate(new Date()),
-    changedDate: getDate(5),
-    name: getValue(6),
-    nameImageId: getValue(7),
-    corporationType: getValue(8),
-    prefectureName: getValue(9),
-    cityName: getValue(10),
-    streetNumber: getValue(11),
-    addressImageId: getValue(12),
-    prefectureCode: getValue(13),
-    cityCode: getValue(14),
-    postalCode: getValue(15),
-    foreignAddress: getValue(16),
-    foreignAddressImageId: getValue(17),
-    closeDate: getDate(18),
-    closeCause: getValue(19),
-    successorCorporateNumber: getValue(20),
-    successorCause: getValue(21),
-    successorDate: getDate(22),
-    dummyFlag: getBool(23),
-    nameEn: getValue(24),
-    prefectureNameEn: getValue(25),
-    streetNumberEn: getValue(26),
-    addressEnImageId: getValue(27),
-    furigana: getValue(28),
-    excludeFromSearch: getBool(29),
-    updatedAt: new Date(),
-    createdAt: new Date(),
-  };
 }
 
 /**
@@ -279,8 +157,6 @@ async function loadDiffDataFromCsv(
 
   for (const filePath of csvFiles) {
     const records: (typeof schema.corporation.$inferInsert)[] = [];
-    let lineCount = 0;
-    let errorCount = 0;
 
     const parser = createReadStream(filePath)
       .pipe(iconv.decodeStream("utf-8"))
@@ -295,20 +171,18 @@ async function loadDiffDataFromCsv(
       );
 
     for await (const record of parser) {
-      lineCount++;
       try {
         if (Array.isArray(record) && record.length >= 30) {
           const parsed = parseCsvRecord(record);
           if (parsed.corporateNumber && parsed.corporateNumber.length === 13) {
-            // 日付範囲でフィルタ
             const recordDate = new Date(parsed.updatedDate);
             if (recordDate >= from && recordDate <= to) {
               records.push(parsed);
             }
           }
         }
-      } catch (error) {
-        errorCount++;
+      } catch {
+        // skip invalid records
       }
     }
 
@@ -323,7 +197,6 @@ async function loadDiffDataFromCsv(
  * POST /api/sync/diff
  */
 export default defineEventHandler(async (event) => {
-  // APIキー認証
   if (!authenticateApiKey(event)) {
     throw createError({
       statusCode: 401,
@@ -335,15 +208,12 @@ export default defineEventHandler(async (event) => {
   const startTime = Date.now();
 
   try {
-    // リクエストボディ取得（オプション）
     const body = await readBody(event).catch(() => ({}));
     const customFromDate = body?.fromDate ? new Date(body.fromDate) : null;
     const customToDate = body?.toDate ? new Date(body.toDate) : null;
 
-    // 1. インポート状態を取得
     const importStateRecord = await getOrCreateImportState();
 
-    // 2. 取得範囲を計算（カスタム日付優先）
     let range: { from: Date; to: Date } | null;
 
     if (customFromDate && customToDate) {
@@ -362,10 +232,8 @@ export default defineEventHandler(async (event) => {
       };
     }
 
-    // 3. インポート実行履歴を記録開始
     const runId = await startImportRun(range.from, range.to);
 
-    // 4. 差分データを取得
     const diffRecords = await loadDiffDataFromCsv(range.from, range.to);
 
     if (diffRecords.length === 0) {
@@ -385,22 +253,15 @@ export default defineEventHandler(async (event) => {
       };
     }
 
-    // 5. UPSERT処理
     let inserted = 0;
     let updated = 0;
-    const batchSize = 100;
 
-    for (let i = 0; i < diffRecords.length; i += batchSize) {
-      const batch = diffRecords.slice(i, i + batchSize);
-
-      for (const record of batch) {
-        const result = await upsertCorporation(record);
-        if (result === "inserted") inserted++;
-        else updated++;
-      }
+    for (const record of diffRecords) {
+      const result = await upsertCorporation(record);
+      if (result === "inserted") inserted++;
+      else updated++;
     }
 
-    // 6. 成功時のみlast_processed_dateを更新
     await updateLastProcessedDate(importStateRecord.id, range.to);
     await completeImportRun(runId, true, {
       processed: diffRecords.length,

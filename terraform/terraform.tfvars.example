@@ -1,0 +1,13 @@
+# terraform.tfvars サンプル
+# このファイルを terraform.tfvars にコピーして値を設定してください
+# terraform.tfvars は .gitignore に追加してください
+
+project_id  = "jp-corporate-search"
+db_password = "your-secure-db-password"
+api_key     = "your-secret-api-key"
+
+# 以下は任意（デフォルト値から変更する場合のみ）
+# region        = "asia-northeast1"
+# db_tier       = "db-g1-small"
+# min_instances = 0
+# max_instances = 3
