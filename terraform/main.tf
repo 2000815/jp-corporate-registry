@@ -31,6 +31,7 @@ resource "google_project_service" "apis" {
     "secretmanager.googleapis.com",
     "cloudscheduler.googleapis.com",
     "servicenetworking.googleapis.com",
+    "aiplatform.googleapis.com",
   ])
   service            = each.value
   disable_on_destroy = false
@@ -236,6 +237,30 @@ resource "google_cloud_run_v2_service_iam_binding" "public" {
   location = var.region
   role     = "roles/run.invoker"
   members  = ["allUsers"]
+}
+
+# ----------------------------------------------------------------
+# 名寄せシステム（corporation-matching）用サービスアカウント
+# ----------------------------------------------------------------
+resource "google_service_account" "matching" {
+  depends_on   = [google_project_service.apis]
+  account_id   = "corporation-matching"
+  display_name = "Corporation Matching SA - Vertex AI + Cloud SQL"
+  description  = "法人名寄せバッチ処理用。Vertex AI Gemini の呼び出しと Cloud SQL の読み取りに使用。"
+}
+
+# Vertex AI Gemini の呼び出し権限
+resource "google_project_iam_member" "matching_vertex_ai" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.matching.email}"
+}
+
+# Cloud SQL への読み取り接続権限
+resource "google_project_iam_member" "matching_sql_client" {
+  project = var.project_id
+  role    = "roles/cloudsql.client"
+  member  = "serviceAccount:${google_service_account.matching.email}"
 }
 
 # ----------------------------------------------------------------
